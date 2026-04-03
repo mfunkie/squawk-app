@@ -4,6 +4,7 @@ import os
 struct MenuBarView: View {
     @Environment(ModelManager.self) private var modelManager
     @Environment(TranscriptionEngine.self) private var transcriptionEngine
+    @Environment(AppState.self) private var appState
     @State private var audioCaptureManager = AudioCaptureManager()
     @State private var permissionStatus: MicrophonePermission = AudioPermissions.currentStatus
     @State private var lastSampleCount = 0
@@ -11,8 +12,19 @@ struct MenuBarView: View {
 
     var body: some View {
         VStack(spacing: 12) {
-            Text("Squawk")
-                .font(.headline)
+            HStack {
+                Text("Squawk")
+                    .font(.headline)
+                Spacer()
+                HStack(spacing: 4) {
+                    Circle()
+                        .fill(appState.ollamaAvailable ? .green : .gray)
+                        .frame(width: 8, height: 8)
+                    Text("Ollama")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+            }
 
             // Model status
             modelStatusView

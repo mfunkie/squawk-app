@@ -9,7 +9,7 @@
 | PHASE-00 | Xcode Project Scaffolding | Done |
 | PHASE-01 | Audio Capture & Permissions | Done |
 | PHASE-02 | FluidAudio ASR Integration | Done |
-| PHASE-03 | Ollama Integration | Not Started |
+| PHASE-03 | Ollama Integration | Done |
 | PHASE-04 | Global Hotkey & State Machine | Not Started |
 | PHASE-05 | Core Pipeline Integration | Not Started |
 | PHASE-06 | SwiftUI Interface & Settings | Not Started |
@@ -49,13 +49,13 @@
 
 ## PHASE-03: Ollama Integration
 
-- [ ] `OllamaClient` health check, model listing, and generate work
-- [ ] `TranscriptRefiner` cleans up raw transcripts
-- [ ] Hallucination guard rejects bad responses (too long, markdown, preamble)
-- [ ] Graceful degradation: skip refinement silently when Ollama unavailable
-- [ ] Background polling detects Ollama availability changes
-- [ ] Ollama model dropdown populated from installed models
-- [ ] Model-not-found error shows `ollama pull` instructions
+- [x] `OllamaClient` health check, model listing, and generate work
+- [x] `TranscriptRefiner` cleans up raw transcripts
+- [x] Hallucination guard rejects bad responses (too long, markdown, preamble)
+- [x] Graceful degradation: skip refinement silently when Ollama unavailable
+- [x] Background polling detects Ollama availability changes
+- [x] Ollama model dropdown populated from installed models
+- [x] Model-not-found error shows `ollama pull` instructions
 
 ## PHASE-04: Global Hotkey & State Machine
 

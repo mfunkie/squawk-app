@@ -5,6 +5,7 @@ import FluidAudio
 struct SquawkApp: App {
     @State private var modelManager = ModelManager()
     @State private var transcriptionEngine: TranscriptionEngine
+    @State private var appState = AppState()
 
     init() {
         let mm = ModelManager()
@@ -17,12 +18,16 @@ struct SquawkApp: App {
             MenuBarView()
                 .environment(modelManager)
                 .environment(transcriptionEngine)
+                .environment(appState)
                 .task {
                     await modelManager.loadModels()
                     if modelManager.isDownloaded {
                         try? await transcriptionEngine.initialize()
                         await transcriptionEngine.warmUp()
                     }
+                }
+                .task {
+                    appState.startOllamaPolling()
                 }
         }
         .menuBarExtraStyle(.window)
