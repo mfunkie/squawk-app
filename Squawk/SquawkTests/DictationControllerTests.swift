@@ -10,18 +10,29 @@ final class DictationControllerTests: XCTestCase {
         XCTAssertEqual(controller.state, .idle)
     }
 
-    func testToggleFromIdleTransitionsToRecording() {
+    func testToggleFromIdleWhenModelNotReadyShowsError() {
         let controller = DictationController()
+        // transcriptionEngine.isReady is false by default
         controller.toggle()
-        XCTAssertEqual(controller.state, .recording)
+        XCTAssertEqual(controller.state, .idle)
+        XCTAssertEqual(controller.lastError, "Speech model not loaded yet")
     }
 
-    func testToggleFromRecordingTransitionsToTranscribing() {
+    func testToggleFromRecordingStopsRecording() {
         let controller = DictationController()
+        // Manually set recording state to test the transition
+        controller.state = .recording
         controller.toggle()
-        XCTAssertEqual(controller.state, .recording)
-        controller.toggle()
-        XCTAssertEqual(controller.state, .transcribing)
+        // toggle from recording kicks off async stopAndTranscribe,
+        // but state moves out of recording
+        // Since stopAndTranscribe is async, we check it left recording
+        let expectation = XCTestExpectation(description: "state transitions")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            // Should be idle (audio was empty so it discards)
+            XCTAssertEqual(controller.state, .idle)
+            expectation.fulfill()
+        }
+        wait(for: [expectation], timeout: 1.0)
     }
 
     func testToggleDuringTranscribingIsIgnored() {
@@ -93,5 +104,35 @@ final class DictationControllerTests: XCTestCase {
 
         controller.state = .refining
         XCTAssertEqual(controller.menuBarIcon, "sparkles")
+    }
+
+    // MARK: - Pipeline Properties
+
+    func testInitialOllamaSettings() {
+        let controller = DictationController()
+        XCTAssertTrue(controller.ollamaEnabled)
+        XCTAssertEqual(controller.ollamaModel, "mistral")
+        XCTAssertFalse(controller.autoPasteEnabled)
+        XCTAssertTrue(controller.restoreClipboardEnabled)
+    }
+
+    func testInitialPipelineState() {
+        let controller = DictationController()
+        XCTAssertFalse(controller.ollamaAvailable)
+        XCTAssertNil(controller.lastLatencyMs)
+        XCTAssertNil(controller.lastError)
+    }
+
+    func testHistoryIsAccessible() {
+        let controller = DictationController()
+        XCTAssertTrue(controller.history.entries.isEmpty)
+    }
+
+    func testModelNotReadyDoesNotTransitionFromIdle() {
+        let controller = DictationController()
+        controller.toggle()
+        // Should stay idle and set error
+        XCTAssertEqual(controller.state, .idle)
+        XCTAssertNotNil(controller.lastError)
     }
 }

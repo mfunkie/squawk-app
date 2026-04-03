@@ -2,13 +2,8 @@ import SwiftUI
 import os
 
 struct MenuBarView: View {
-    @Environment(ModelManager.self) private var modelManager
-    @Environment(TranscriptionEngine.self) private var transcriptionEngine
-    @Environment(AppState.self) private var appState
-    @State private var audioCaptureManager = AudioCaptureManager()
+    @Environment(DictationController.self) private var controller
     @State private var permissionStatus: MicrophonePermission = AudioPermissions.currentStatus
-    @State private var lastSampleCount = 0
-    @State private var lastTranscript = ""
 
     var body: some View {
         VStack(spacing: 12) {
@@ -18,7 +13,7 @@ struct MenuBarView: View {
                 Spacer()
                 HStack(spacing: 4) {
                     Circle()
-                        .fill(appState.ollamaAvailable ? .green : .gray)
+                        .fill(controller.ollamaAvailable ? .green : .gray)
                         .frame(width: 8, height: 8)
                     Text("Ollama")
                         .font(.caption2)
@@ -33,15 +28,15 @@ struct MenuBarView: View {
             permissionView
 
             // Audio level meter
-            if audioCaptureManager.isCapturing {
-                ProgressView(value: Double(audioCaptureManager.audioLevel), total: 0.5)
+            if controller.audioCaptureManager.isCapturing {
+                ProgressView(value: Double(controller.audioCaptureManager.audioLevel), total: 0.5)
                     .progressViewStyle(.linear)
                 Text("Recording...")
                     .foregroundStyle(.red)
             }
 
             // Transcription in progress
-            if transcriptionEngine.isTranscribing {
+            if controller.transcriptionEngine.isTranscribing {
                 HStack(spacing: 6) {
                     ProgressView()
                         .controlSize(.small)
@@ -51,23 +46,35 @@ struct MenuBarView: View {
                 }
             }
 
-            // Test buttons
-            if permissionStatus == .authorized {
-                Button(audioCaptureManager.isCapturing ? "Stop & Transcribe" : "Record") {
-                    toggleRecording()
+            // State: refining
+            if controller.state == .refining {
+                HStack(spacing: 6) {
+                    ProgressView()
+                        .controlSize(.small)
+                    Text("Polishing...")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
-                .disabled(!transcriptionEngine.isReady || transcriptionEngine.isTranscribing)
             }
 
-            if lastSampleCount > 0 {
-                Text("\(lastSampleCount) samples (\(String(format: "%.1f", Double(lastSampleCount) / 16000.0))s)")
+            // Error display
+            if let error = controller.lastError {
+                Text(error)
+                    .font(.caption)
+                    .foregroundStyle(.red)
+            }
+
+            // Latency display
+            if let latency = controller.lastLatencyMs {
+                Text("Last: \(latency)ms")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
 
-            // Transcript display
-            if !lastTranscript.isEmpty {
-                Text(lastTranscript)
+            // Recent transcript
+            if let latest = controller.history.entries.first {
+                let displayText = latest.polishedText ?? latest.rawText
+                Text(displayText)
                     .font(.body)
                     .textSelection(.enabled)
                     .padding(8)
@@ -91,6 +98,9 @@ struct MenuBarView: View {
 
     @ViewBuilder
     private var modelStatusView: some View {
+        let modelManager = controller.modelManager
+        let transcriptionEngine = controller.transcriptionEngine!
+
         if modelManager.isLoading {
             VStack(spacing: 8) {
                 ProgressView(value: modelManager.downloadProgress)
@@ -142,34 +152,6 @@ struct MenuBarView: View {
         case .restricted:
             Text("Microphone access restricted by admin")
                 .foregroundStyle(.red)
-        }
-    }
-
-    private func toggleRecording() {
-        if audioCaptureManager.isCapturing {
-            stopAndTranscribe()
-        } else {
-            do {
-                try audioCaptureManager.startCapture()
-            } catch {
-                Log.audio.error("Failed to start capture: \(error)")
-            }
-        }
-    }
-
-    private func stopAndTranscribe() {
-        let samples = audioCaptureManager.stopCapture()
-        lastSampleCount = samples.count
-        guard !samples.isEmpty else { return }
-
-        Task {
-            do {
-                let text = try await transcriptionEngine.transcribe(audioSamples: samples)
-                lastTranscript = text
-            } catch {
-                Log.asr.error("Transcription failed: \(error)")
-                lastTranscript = "Error: \(error.localizedDescription)"
-            }
         }
     }
 }

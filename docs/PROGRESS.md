@@ -11,7 +11,7 @@
 | PHASE-02 | FluidAudio ASR Integration | Done |
 | PHASE-03 | Ollama Integration | Done |
 | PHASE-04 | Global Hotkey & State Machine | Done |
-| PHASE-05 | Core Pipeline Integration | Not Started |
+| PHASE-05 | Core Pipeline Integration | Done |
 | PHASE-06 | SwiftUI Interface & Settings | Not Started |
 | PHASE-07 | Packaging & Distribution | Not Started |
 
@@ -69,15 +69,15 @@
 
 ## PHASE-05: Core Pipeline Integration
 
-- [ ] Full pipeline: hotkey → record → ASR → (optional Ollama) → clipboard
-- [ ] `TextInjector` copies text to clipboard
-- [ ] Auto-paste simulates Cmd+V into active app
-- [ ] Clipboard contents saved and restored after paste
-- [ ] Transcript history persists to JSON
-- [ ] Empty/short recordings discarded
-- [ ] Ollama refinement timeout (5s) falls back to raw text
-- [ ] Error recovery returns to idle state
-- [ ] End-to-end latency <1.5s (no Ollama) for 5s audio
+- [x] Full pipeline: hotkey → record → ASR → (optional Ollama) → clipboard
+- [x] `TextInjector` copies text to clipboard
+- [x] Auto-paste simulates Cmd+V into active app
+- [x] Clipboard contents saved and restored after paste
+- [x] Transcript history persists to JSON
+- [x] Empty/short recordings discarded
+- [x] Ollama refinement timeout (5s) falls back to raw text
+- [x] Error recovery returns to idle state
+- [x] End-to-end latency <1.5s (no Ollama) for 5s audio
 
 ## PHASE-06: SwiftUI Interface & Settings
 

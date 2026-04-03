@@ -44,4 +44,3 @@ Implement the next uncompleted project phase.
 - Do not add features, refactor, or make improvements beyond what the phase doc specifies.
 - If a step fails or a dependency doesn't exist, diagnose and adapt. Report blockers to the user rather than guessing.
 - If the phase doc references test fixtures or sample data, create minimal valid versions.
-- Always use `function` statements at module scope, never `const f = () => {}` (per global CLAUDE.md).
