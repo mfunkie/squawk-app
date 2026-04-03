@@ -8,7 +8,7 @@
 |-------|-------------|--------|
 | PHASE-00 | Xcode Project Scaffolding | Done |
 | PHASE-01 | Audio Capture & Permissions | Done |
-| PHASE-02 | FluidAudio ASR Integration | Not Started |
+| PHASE-02 | FluidAudio ASR Integration | Done |
 | PHASE-03 | Ollama Integration | Not Started |
 | PHASE-04 | Global Hotkey & State Machine | Not Started |
 | PHASE-05 | Core Pipeline Integration | Not Started |
@@ -39,13 +39,13 @@
 
 ## PHASE-02: FluidAudio ASR Integration
 
-- [ ] `ModelManager` downloads and loads Parakeet CoreML model
-- [ ] Download progress shown in UI on first run
-- [ ] Download failure surfaced with retry button
-- [ ] `TranscriptionEngine` transcribes audio samples to text
-- [ ] Transcription <500ms for 5-second clip on Apple Silicon
-- [ ] Model warm-up runs on launch
-- [ ] First-ever CoreML compilation communicated to user
+- [x] `ModelManager` downloads and loads Parakeet CoreML model
+- [x] Download progress shown in UI on first run
+- [x] Download failure surfaced with retry button
+- [x] `TranscriptionEngine` transcribes audio samples to text
+- [x] Transcription <500ms for 5-second clip on Apple Silicon
+- [x] Model warm-up runs on launch
+- [x] First-ever CoreML compilation communicated to user
 
 ## PHASE-03: Ollama Integration
 
