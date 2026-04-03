@@ -12,7 +12,7 @@
 | PHASE-03 | Ollama Integration | Done |
 | PHASE-04 | Global Hotkey & State Machine | Done |
 | PHASE-05 | Core Pipeline Integration | Done |
-| PHASE-06 | SwiftUI Interface & Settings | Not Started |
+| PHASE-06 | SwiftUI Interface & Settings | Done |
 | PHASE-07 | Packaging & Distribution | Not Started |
 
 ---
@@ -81,18 +81,18 @@
 
 ## PHASE-06: SwiftUI Interface & Settings
 
-- [ ] MenuBarView with tabs (Transcripts / Settings / About)
-- [ ] StatusBar shows state with audio level bars during recording
-- [ ] TranscriptListView with click-to-copy and "Copied!" feedback
-- [ ] Empty state with instructions
-- [ ] Settings: hotkey change with capture UI
-- [ ] Settings: recording mode (toggle / push-to-talk)
-- [ ] Settings: ASR model version picker
-- [ ] Settings: Ollama enable/disable, dynamic model dropdown, custom prompt
-- [ ] Settings: auto-paste toggle, clipboard restore toggle
-- [ ] Settings: launch at login via SMAppService
-- [ ] About view with version, credits, "Copy Debug Info"
-- [ ] Dark mode renders correctly
+- [x] MenuBarView with tabs (Transcripts / Settings / About)
+- [x] StatusBar shows state with audio level bars during recording
+- [x] TranscriptListView with click-to-copy and "Copied!" feedback
+- [x] Empty state with instructions
+- [x] Settings: hotkey change with capture UI
+- [x] Settings: recording mode (toggle / push-to-talk)
+- [x] Settings: ASR model version picker
+- [x] Settings: Ollama enable/disable, dynamic model dropdown, custom prompt
+- [x] Settings: auto-paste toggle, clipboard restore toggle
+- [x] Settings: launch at login via SMAppService
+- [x] About view with version, credits, "Copy Debug Info"
+- [x] Dark mode renders correctly
 
 ## PHASE-07: Packaging & Distribution
 
