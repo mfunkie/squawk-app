@@ -25,11 +25,13 @@ Implement the next uncompleted project phase.
    - Where the doc provides placeholder/stub code (e.g. TODO comments, stubs), implement it as-is — do not fill in logic the doc explicitly defers to later phases.
    - **When writing or reviewing SwiftUI code, use the `/swiftui-pro` skill** to ensure best practices for macOS 14+.
 
-4. **Verify the build** — run `xcodebuild -project Squawk.xcodeproj -scheme Squawk -destination 'platform=macOS' build` to confirm everything compiles. **Do NOT use `swift build`** — it will compile but crash at runtime due to Metal shader requirements.
+4. **Write tests first (red/green TDD)** — before implementing application logic, write failing unit tests in `Squawk/SquawkTests/` that cover the acceptance criteria. Run `xcodebuild test` to confirm they fail (red). Then write the minimum implementation to make them pass (green). Repeat for each piece of testable logic. Tests should cover business logic, state machines, and data transforms — not SwiftUI views.
 
-5. **Update `docs/PROGRESS.md`** — check off completed acceptance criteria and change the phase status to "Done" or "In Progress".
+5. **Verify the build** — run `xcodebuild -project Squawk.xcodeproj -scheme Squawk -destination 'platform=macOS' build` to confirm everything compiles. **Do NOT use `swift build`** — it will compile but crash at runtime due to Metal shader requirements.
 
-6. **Commit all changes** in a single commit with a message following this pattern:
+6. **Update `docs/PROGRESS.md`** — check off completed acceptance criteria and change the phase status to "Done" or "In Progress".
+
+7. **Commit all changes** in a single commit with a message following this pattern:
    ```
    Phase XX: <short summary>
 
