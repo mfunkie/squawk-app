@@ -31,6 +31,7 @@ xcodebuild -project Squawk/Squawk.xcodeproj -scheme Squawk -destination 'platfor
 ## Testing
 
 - **Write tests often** — every phase should include unit tests for new logic
+- **Red/green TDD for application logic** — write a failing test first, then write the minimum code to make it pass
 - Tests live in `Squawk/SquawkTests/`
 - Use `XCTest` framework (built-in, no third-party test deps)
 - Test business logic, state machines, data transforms — not SwiftUI views directly
