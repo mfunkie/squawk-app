@@ -7,7 +7,7 @@
 | Phase | Description | Status |
 |-------|-------------|--------|
 | PHASE-00 | Xcode Project Scaffolding | Done |
-| PHASE-01 | Audio Capture & Permissions | Not Started |
+| PHASE-01 | Audio Capture & Permissions | Done |
 | PHASE-02 | FluidAudio ASR Integration | Not Started |
 | PHASE-03 | Ollama Integration | Not Started |
 | PHASE-04 | Global Hotkey & State Machine | Not Started |
@@ -29,13 +29,13 @@
 
 ## PHASE-01: Audio Capture & Permissions
 
-- [ ] `AudioCaptureManager` captures 16kHz mono Float32 PCM
-- [ ] Audio level (RMS) updates during recording
-- [ ] `AudioPermissions` checks and requests microphone access
-- [ ] Permission denied state shows System Settings link
-- [ ] No crash with no input device
-- [ ] Audio engine handles configuration changes (BT headphones)
-- [ ] Test record/stop button works in popover
+- [x] `AudioCaptureManager` captures 16kHz mono Float32 PCM
+- [x] Audio level (RMS) updates during recording
+- [x] `AudioPermissions` checks and requests microphone access
+- [x] Permission denied state shows System Settings link
+- [x] No crash with no input device
+- [x] Audio engine handles configuration changes (BT headphones)
+- [x] Test record/stop button works in popover
 
 ## PHASE-02: FluidAudio ASR Integration
 
