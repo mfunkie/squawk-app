@@ -10,7 +10,7 @@
 | PHASE-01 | Audio Capture & Permissions | Done |
 | PHASE-02 | FluidAudio ASR Integration | Done |
 | PHASE-03 | Ollama Integration | Done |
-| PHASE-04 | Global Hotkey & State Machine | Not Started |
+| PHASE-04 | Global Hotkey & State Machine | Done |
 | PHASE-05 | Core Pipeline Integration | Not Started |
 | PHASE-06 | SwiftUI Interface & Settings | Not Started |
 | PHASE-07 | Packaging & Distribution | Not Started |
@@ -59,13 +59,13 @@
 
 ## PHASE-04: Global Hotkey & State Machine
 
-- [ ] Cmd+Shift+Space toggles recording from any app
-- [ ] Both global and local event monitors installed
-- [ ] 300ms debounce prevents double-trigger
-- [ ] Menu bar icon changes per state (idle/recording/transcribing/refining)
-- [ ] Recording timeout at configurable max duration
-- [ ] Sleep/wake re-registers hotkey
-- [ ] Push-to-talk mode (optional, Accessibility-gated)
+- [x] Cmd+Shift+Space toggles recording from any app
+- [x] Both global and local event monitors installed
+- [x] 300ms debounce prevents double-trigger
+- [x] Menu bar icon changes per state (idle/recording/transcribing/refining)
+- [x] Recording timeout at configurable max duration
+- [x] Sleep/wake re-registers hotkey
+- [x] Push-to-talk mode (optional, Accessibility-gated)
 
 ## PHASE-05: Core Pipeline Integration
 

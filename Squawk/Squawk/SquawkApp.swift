@@ -6,6 +6,8 @@ struct SquawkApp: App {
     @State private var modelManager = ModelManager()
     @State private var transcriptionEngine: TranscriptionEngine
     @State private var appState = AppState()
+    @State private var dictationController = DictationController()
+    private let hotkeyManager = HotkeyManager()
 
     init() {
         let mm = ModelManager()
@@ -14,11 +16,12 @@ struct SquawkApp: App {
     }
 
     var body: some Scene {
-        MenuBarExtra("Squawk", systemImage: "mic") {
+        MenuBarExtra("Squawk", systemImage: dictationController.menuBarIcon) {
             MenuBarView()
                 .environment(modelManager)
                 .environment(transcriptionEngine)
                 .environment(appState)
+                .environment(dictationController)
                 .task {
                     await modelManager.loadModels()
                     if modelManager.isDownloaded {
@@ -28,6 +31,13 @@ struct SquawkApp: App {
                 }
                 .task {
                     appState.startOllamaPolling()
+                }
+                .onAppear {
+                    hotkeyManager.onToggle = { [dictationController] in
+                        dictationController.toggle()
+                    }
+                    hotkeyManager.start()
+                    dictationController.observeSystemEvents()
                 }
         }
         .menuBarExtraStyle(.window)
