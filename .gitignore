@@ -1,10 +1,43 @@
 ## Xcode user data
 xcuserdata/
 *.xcuserstate
+*.xcscmblueprint
+*.xccheckout
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
 
 ## Build
 DerivedData/
 build/
+*.o
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+## Swift Package Manager
+.swiftpm/
+.build/
+# Note: Package.resolved is tracked intentionally to lock SPM dependency versions
 
 ## macOS
 .DS_Store
+.AppleDouble
+.LSOverride
+
+## Xcode workspace
+*.xcworkspace/xcuserdata/
+
+## Archives
+*.xcarchive
+
+## Playgrounds
+timeline.xctimeline
+playground.xcworkspace
+
+## Misc
+*.moved-aside
+*.swp
+*~
