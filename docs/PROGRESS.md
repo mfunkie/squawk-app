@@ -13,7 +13,7 @@
 | PHASE-04 | Global Hotkey & State Machine | Done |
 | PHASE-05 | Core Pipeline Integration | Done |
 | PHASE-06 | SwiftUI Interface & Settings | Done |
-| PHASE-07 | Packaging & Distribution | Not Started |
+| PHASE-07 | Packaging & Distribution | Done |
 
 ---
 
@@ -96,17 +96,17 @@
 
 ## PHASE-07: Packaging & Distribution
 
-- [ ] First-run wizard: welcome → model download → mic permission → ready
-- [ ] `hasCompletedSetup` prevents re-showing wizard
-- [ ] Edge cases: sleep/wake, device changes, rapid input, empty utterance
-- [ ] Single-instance enforcement
-- [ ] Low disk space warning before model download
+- [x] First-run wizard: welcome → model download → mic permission → ready
+- [x] `hasCompletedSetup` prevents re-showing wizard
+- [x] Edge cases: sleep/wake, device changes, rapid input, empty utterance
+- [x] Single-instance enforcement
+- [x] Low disk space warning before model download
 - [ ] App icon in all required sizes
 - [ ] `xcodebuild archive` succeeds
 - [ ] Exported .app runs on clean Mac
 - [ ] Notarization passes
-- [ ] DMG with drag-to-Applications
+- [x] DMG with drag-to-Applications
 - [ ] .app bundle <20MB
 - [ ] Idle memory <50MB
-- [ ] README.md complete
+- [x] README.md complete
 - [ ] Launch at login works after reboot

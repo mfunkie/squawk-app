@@ -1,6 +1,9 @@
 import SwiftUI
 
 struct AboutView: View {
+    @Environment(DictationController.self) private var controller
+    @AppStorage("recording.mode") private var recordingMode: String = "toggle"
+
     private var appVersion: String {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.1.0"
     }
@@ -49,7 +52,14 @@ struct AboutView: View {
     private func copyDebugInfo() {
         let info = DebugInfoBuilder.buildDebugInfo(
             appVersion: appVersion,
-            buildNumber: buildNumber
+            buildNumber: buildNumber,
+            asrModelLoaded: controller.modelManager.isDownloaded,
+            ollamaAvailable: controller.ollamaAvailable,
+            ollamaModel: controller.ollamaModel,
+            recordingMode: recordingMode,
+            autoPasteEnabled: controller.autoPasteEnabled,
+            historyCount: controller.history.entries.count,
+            lastError: controller.lastError
         )
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(info, forType: .string)

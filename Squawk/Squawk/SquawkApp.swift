@@ -2,10 +2,14 @@ import SwiftUI
 
 @main
 struct SquawkApp: App {
+    @AppStorage("hasCompletedSetup") private var hasCompletedSetup = false
     @State private var dictationController: DictationController
     private let hotkeyManager: HotkeyManager
 
     init() {
+        // Single-instance enforcement
+        SingleInstanceGuard.terminateIfDuplicate()
+
         let controller = DictationController()
         let hotkey = HotkeyManager()
         hotkey.onToggle = { [weak controller] in
@@ -32,11 +36,16 @@ struct SquawkApp: App {
 
     var body: some Scene {
         MenuBarExtra("Squawk", systemImage: dictationController.menuBarIcon) {
-            MenuBarView()
-                .environment(dictationController)
-                .onAppear {
-                    dictationController.observeSystemEvents()
-                }
+            if hasCompletedSetup {
+                MenuBarView()
+                    .environment(dictationController)
+                    .onAppear {
+                        dictationController.observeSystemEvents()
+                    }
+            } else {
+                FirstRunView()
+                    .environment(dictationController)
+            }
         }
         .menuBarExtraStyle(.window)
     }
