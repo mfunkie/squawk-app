@@ -320,6 +320,14 @@ if runningApps.count > 1 {
 
 ### Step 3: App Icon
 
+> **🧑‍💻 USER ACTION REQUIRED — Xcode GUI (Asset Catalog):**
+> After Claude Code generates the icon PNGs (or you provide a source image), you need to:
+> 1. Open `Assets.xcassets` in Xcode
+> 2. Select `AppIcon`
+> 3. Drag each sized PNG into the corresponding slot
+> 4. Optionally: add a `MenuBarIcon` image set, mark it as **Template Image** for automatic light/dark adaptation
+> 5. Tell Claude Code when done.
+
 Create all required icon sizes in `Assets.xcassets/AppIcon.appiconset/`:
 
 | Size | Scale | Filename |
@@ -342,6 +350,15 @@ Design: a stylized microphone or speech bubble. Start with a simple SF Symbol-ba
 - Mark as "Template Image" in the asset catalog for automatic light/dark mode adaptation
 
 ### Step 4: Build & Archive
+
+> **🧑‍💻 USER ACTION REQUIRED — Xcode GUI (optional, for manual archive):**
+> If you prefer to archive via Xcode GUI instead of the script below:
+> 1. In Xcode: **Product → Archive**
+> 2. Wait for archive to complete
+> 3. In the Organizer window, select the archive → **Distribute App**
+> 4. Choose **Developer ID** distribution method
+> 5. Follow the signing prompts
+> 6. The script below automates this same process via CLI.
 
 `scripts/build.sh`:
 
@@ -390,6 +407,17 @@ echo "Build complete: $EXPORT_PATH/Squawk.app"
 ```
 
 ### Step 5: Notarization
+
+> **🧑‍💻 USER ACTION REQUIRED — Terminal (one-time setup):**
+> Before the notarize script can run, you must store your Apple ID credentials in the keychain:
+> ```bash
+> xcrun notarytool store-credentials squawk-notarize \
+>   --apple-id YOUR_APPLE_ID \
+>   --team-id YOUR_TEAM_ID \
+>   --password YOUR_APP_SPECIFIC_PASSWORD
+> ```
+> Generate an app-specific password at https://appleid.apple.com/account/manage
+> Tell Claude Code when this is configured.
 
 `scripts/notarize.sh`:
 

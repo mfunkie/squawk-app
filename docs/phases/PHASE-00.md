@@ -53,18 +53,21 @@ Squawk/
 
 ### Step 1: Create Xcode Project
 
-1. Open Xcode → File → New → Project
-2. Select macOS → App
-3. Configure:
-   - Product Name: `Squawk`
-   - Team: your dev team (or Personal Team)
-   - Organization Identifier: `com.squawk`
-   - Bundle Identifier: `com.squawk.app`
-   - Interface: SwiftUI
-   - Language: Swift
-   - Deployment Target: macOS 14.0
-4. Save into the `squawk-app` working directory
-5. Delete the auto-generated `ContentView.swift` — we won't use it
+> **🧑‍💻 USER ACTION REQUIRED — Xcode GUI:**
+> 1. Open Xcode → File → New → Project
+> 2. Select **macOS → App**
+> 3. Configure:
+>    - Product Name: `Squawk`
+>    - Team: your dev team (or Personal Team)
+>    - Organization Identifier: `com.squawk`
+>    - Bundle Identifier: `com.squawk.app`
+>    - Interface: **SwiftUI**
+>    - Language: **Swift**
+> 4. **Save into the `squawk-app` working directory** (this repo root)
+> 5. Set Deployment Target to **macOS 14.0** in the target's General tab
+> 6. Tell Claude Code when done so it can continue with file creation.
+
+After the user creates the project, delete the auto-generated `ContentView.swift` — we won't use it.
 
 ### Step 2: Configure Menu-Bar-Only App
 
@@ -115,19 +118,27 @@ Squawk/
 
 ### Step 3: Add FluidAudio SPM Dependency
 
-1. In Xcode: File → Add Package Dependencies
-2. Enter URL: `https://github.com/FluidInference/FluidAudio.git`
-3. Dependency rule: **Up to Next Major Version**, starting from `0.12.0`
-4. **IMPORTANT:** On the "Choose Package Products" screen, add only the **`FluidAudio` library** product to the `Squawk` app target. Do NOT add any executable targets — FluidAudio ships CLI tools that should not be embedded in the app.
-5. Verify by adding a temporary import at the top of `SquawkApp.swift`:
-   ```swift
-   import FluidAudio
-   ```
-   Build — it must compile without errors.
+> **🧑‍💻 USER ACTION REQUIRED — Xcode GUI:**
+> 1. In Xcode: **File → Add Package Dependencies**
+> 2. Enter URL: `https://github.com/FluidInference/FluidAudio.git`
+> 3. Dependency rule: **Up to Next Major Version**, starting from `0.12.0`
+> 4. **IMPORTANT:** On the "Choose Package Products" screen, add **only the `FluidAudio` library** product to the `Squawk` app target. Do NOT add any executable targets — FluidAudio ships CLI tools that should not be embedded in the app.
+> 5. Wait for SPM resolution to complete (may take 1-2 minutes on first fetch).
+> 6. Tell Claude Code when done so it can verify the import compiles.
 
-### Step 4: Configure Entitlements
+After the user adds the dependency, verify by adding `import FluidAudio` at the top of `SquawkApp.swift` and building.
 
-Create `Squawk.entitlements`:
+### Step 4: Configure Entitlements & Signing
+
+> **🧑‍💻 USER ACTION REQUIRED — Xcode GUI (Signing & Capabilities tab):**
+> 1. Select the **Squawk** target → **Signing & Capabilities** tab
+> 2. Ensure **Hardened Runtime** is ON (add it via "+ Capability" if not present)
+> 3. Ensure **App Sandbox** is **OFF** (remove it if present) — we need CGEvent posting and Accessibility API access, both blocked by sandbox
+> 4. Under Hardened Runtime, check **Audio Input** if available as a runtime exception
+> 5. Verify signing identity is set (your dev team or Personal Team)
+> 6. Tell Claude Code when done.
+
+After the user configures signing, create/update `Squawk.entitlements`:
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -141,7 +152,7 @@ Create `Squawk.entitlements`:
 
 **Sandboxing decision:**
 - App Sandbox: **OFF** — the app needs `CGEvent` posting for auto-paste and Accessibility API access for push-to-talk. Both are blocked by the sandbox. This is standard for menu bar utilities (see: Rectangle, Raycast, Alfred).
-- Hardened Runtime: **ON** — required for notarization. Configured in the target's Signing & Capabilities tab.
+- Hardened Runtime: **ON** — required for notarization.
 - See `docs/DECISIONS.md` ADR #6 for full rationale.
 
 ### Step 5: Create Skeleton Source Files

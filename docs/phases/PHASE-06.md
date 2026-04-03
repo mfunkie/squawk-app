@@ -785,6 +785,8 @@ For custom backgrounds, use `.regularMaterial`, `.thinMaterial`, etc. — these 
 
 3. **`SMAppService` errors** — `register()` can fail silently if the app isn't properly signed. Test with a signed build.
 
+> **🧑‍💻 USER ACTION — if launch-at-login doesn't work:** Verify in Xcode that the target is signed with a valid Developer ID or Personal Team (not ad-hoc). SMAppService requires proper signing.
+
 4. **`Form` in menu bar popover** — `Form` with `.grouped` style works well in the `.window` style popover. Test that scrolling works for long settings lists.
 
 5. **Dynamic Ollama model list** — The model dropdown is populated by querying `GET /api/tags` from Ollama. If Ollama isn't running, fall back to showing just the currently configured model name as a text field. Refresh on view appear and via a manual "Refresh" button.
