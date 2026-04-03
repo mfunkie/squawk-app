@@ -6,7 +6,7 @@
 
 | Phase | Description | Status |
 |-------|-------------|--------|
-| PHASE-00 | Xcode Project Scaffolding | Not Started |
+| PHASE-00 | Xcode Project Scaffolding | Done |
 | PHASE-01 | Audio Capture & Permissions | Not Started |
 | PHASE-02 | FluidAudio ASR Integration | Not Started |
 | PHASE-03 | Ollama Integration | Not Started |
@@ -19,13 +19,13 @@
 
 ## PHASE-00: Xcode Project Scaffolding
 
-- [ ] Xcode project created with correct bundle ID and deployment target
-- [ ] `LSUIElement = YES` in Info.plist (no dock icon)
-- [ ] `MenuBarExtra` with `.window` style renders in system tray
-- [ ] FluidAudio SPM dependency added and compiling
-- [ ] All skeleton source files created and compiling
-- [ ] Entitlements configured (audio input, hardened runtime, no sandbox)
-- [ ] `xcodebuild` build succeeds
+- [x] Xcode project created with correct bundle ID and deployment target
+- [x] `LSUIElement = YES` in Info.plist (no dock icon)
+- [x] `MenuBarExtra` with `.window` style renders in system tray
+- [x] FluidAudio SPM dependency added and compiling
+- [x] All skeleton source files created and compiling
+- [x] Entitlements configured (audio input, hardened runtime, no sandbox)
+- [x] `xcodebuild` build succeeds
 
 ## PHASE-01: Audio Capture & Permissions
 

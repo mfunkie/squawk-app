@@ -21,8 +21,20 @@ Track what's done and what's next in `docs/PROGRESS.md`. Use `/do-phase` to impl
 ```bash
 # ALWAYS use xcodebuild — NOT swift build
 # swift build compiles but crashes at runtime (Metal shader compilation)
-xcodebuild -project Squawk.xcodeproj -scheme Squawk -destination 'platform=macOS' build
+# The Xcode project lives in the Squawk/ subdirectory
+xcodebuild -project Squawk/Squawk.xcodeproj -scheme Squawk -destination 'platform=macOS' build
+
+# Run tests
+xcodebuild -project Squawk/Squawk.xcodeproj -scheme Squawk -destination 'platform=macOS' test
 ```
+
+## Testing
+
+- **Write tests often** — every phase should include unit tests for new logic
+- Tests live in `Squawk/SquawkTests/`
+- Use `XCTest` framework (built-in, no third-party test deps)
+- Test business logic, state machines, data transforms — not SwiftUI views directly
+- Run tests via `xcodebuild test` (see Build Commands above)
 
 ## Key Constraints
 
