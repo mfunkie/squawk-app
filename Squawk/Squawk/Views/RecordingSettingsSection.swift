@@ -20,7 +20,7 @@ struct RecordingSettingsSection: View {
         HStack {
             Text("Hotkey")
             Spacer()
-            Text("⌘⇧Space")
+            Text(controller.hotkeyManager?.hotkeyDescription ?? "\u{2318}\u{21E7}Space")
                 .foregroundStyle(.secondary)
             Button("Change", action: startCapture)
                 .buttonStyle(.borderless)

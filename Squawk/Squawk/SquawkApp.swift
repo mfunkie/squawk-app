@@ -4,6 +4,7 @@ import SwiftUI
 struct SquawkApp: App {
     @AppStorage("hasCompletedSetup") private var hasCompletedSetup = false
     @State private var dictationController: DictationController
+    @State private var hasStartedServices = false
     private let hotkeyManager: HotkeyManager
 
     init() {
@@ -17,36 +18,41 @@ struct SquawkApp: App {
                 controller?.toggle()
             }
         }
+        controller.hotkeyManager = hotkey
         _dictationController = State(initialValue: controller)
         hotkeyManager = hotkey
-
-        // Start services
-        hotkey.start()
-        controller.startOllamaPolling()
-
-        // Load models in background
-        Task {
-            await controller.modelManager.loadModels()
-            if controller.modelManager.isDownloaded {
-                try? await controller.transcriptionEngine.initialize()
-                await controller.transcriptionEngine.warmUp()
-            }
-        }
     }
 
     var body: some Scene {
         MenuBarExtra("Squawk", systemImage: dictationController.menuBarIcon) {
-            if hasCompletedSetup {
-                MenuBarView()
-                    .environment(dictationController)
-                    .onAppear {
-                        dictationController.observeSystemEvents()
-                    }
-            } else {
-                FirstRunView()
-                    .environment(dictationController)
+            Group {
+                if hasCompletedSetup {
+                    MenuBarView()
+                        .environment(dictationController)
+                } else {
+                    FirstRunView()
+                        .environment(dictationController)
+                }
+            }
+            .onAppear {
+                startServicesIfNeeded()
             }
         }
         .menuBarExtraStyle(.window)
+    }
+
+    private func startServicesIfNeeded() {
+        guard !hasStartedServices else { return }
+        hasStartedServices = true
+        hotkeyManager.start()
+        dictationController.observeSystemEvents()
+        dictationController.startOllamaPolling()
+        Task {
+            await dictationController.modelManager.loadModels()
+            if dictationController.modelManager.isDownloaded {
+                try? await dictationController.transcriptionEngine.initialize()
+                await dictationController.transcriptionEngine.warmUp()
+            }
+        }
     }
 }

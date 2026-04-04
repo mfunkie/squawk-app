@@ -5,49 +5,55 @@ struct HotkeyCaptureOverlay: View {
     @Binding var isActive: Bool
     var onCapture: (UInt16, NSEvent.ModifierFlags) -> Void
 
+    @State private var monitor: Any?
+
     var body: some View {
-        VStack(spacing: 12) {
-            Text("Press a new shortcut")
-                .font(.headline)
-            Text("Use a modifier key (⌘, ⌥, ⌃, ⇧) + a letter or key")
-                .font(.caption)
+        ZStack {
+            Color.black.opacity(0.3)
+                .ignoresSafeArea()
+
+            VStack(spacing: 12) {
+                Text("Press a new shortcut")
+                    .font(.headline)
+                Text("Use a modifier key (\u{2318}, \u{2325}, \u{2303}, \u{21E7}) + a letter or key")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Button("Cancel") {
+                    stopMonitoring()
+                    isActive = false
+                }
+                Button("Reset to Default") {
+                    stopMonitoring()
+                    onCapture(UInt16(kVK_Space), [.command, .shift])
+                    isActive = false
+                }
                 .foregroundStyle(.secondary)
-            Button("Cancel", action: cancel)
-            Button("Reset to Default", action: resetToDefault)
-                .foregroundStyle(.secondary)
+            }
+            .padding(20)
+            .background(.regularMaterial)
+            .clipShape(.rect(cornerRadius: 12))
         }
-        .padding(20)
-        .background(.regularMaterial)
-        .clipShape(.rect(cornerRadius: 12))
-        .onKeyPress { press in
-            handleKeyPress(press)
+        .onAppear { startMonitoring() }
+        .onDisappear { stopMonitoring() }
+    }
+
+    private func startMonitoring() {
+        monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+            let relevantModifiers: NSEvent.ModifierFlags = [.command, .shift, .option, .control]
+            let pressed = event.modifierFlags.intersection(relevantModifiers)
+            guard !pressed.isEmpty else { return event }
+
+            stopMonitoring()
+            onCapture(event.keyCode, pressed)
+            isActive = false
+            return nil // consume the event
         }
     }
 
-    private func cancel() {
-        isActive = false
-    }
-
-    private func resetToDefault() {
-        onCapture(UInt16(kVK_Space), [.command, .shift])
-        isActive = false
-    }
-
-    private func handleKeyPress(_ press: KeyPress) -> KeyPress.Result {
-        let hasModifier = !press.modifiers.intersection([.command, .shift, .option, .control]).isEmpty
-        guard hasModifier else { return .ignored }
-
-        // Convert KeyPress modifiers to NSEvent.ModifierFlags
-        var flags: NSEvent.ModifierFlags = []
-        if press.modifiers.contains(.command) { flags.insert(.command) }
-        if press.modifiers.contains(.shift) { flags.insert(.shift) }
-        if press.modifiers.contains(.option) { flags.insert(.option) }
-        if press.modifiers.contains(.control) { flags.insert(.control) }
-
-        // KeyPress doesn't expose keyCode directly; use the character to approximate
-        // For a full implementation, NSEvent local monitor would be needed
-        onCapture(UInt16(kVK_Space), flags)
-        isActive = false
-        return .handled
+    private func stopMonitoring() {
+        if let monitor {
+            NSEvent.removeMonitor(monitor)
+            self.monitor = nil
+        }
     }
 }

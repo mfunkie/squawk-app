@@ -8,7 +8,8 @@ struct StatusBar: View {
             StatusBarIcon(state: controller.state)
             StatusBarText(
                 state: controller.state,
-                lastError: controller.lastError
+                lastError: controller.lastError,
+                hotkeyDescription: controller.hotkeyManager?.hotkeyDescription ?? "\u{2318}\u{21E7}Space"
             )
             Spacer()
 

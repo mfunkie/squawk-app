@@ -18,8 +18,12 @@ struct SettingsView: View {
         }
         .overlay {
             if isCapturingHotkey {
-                HotkeyCaptureOverlay(isActive: $isCapturingHotkey) { _, _ in
-                    // Hotkey change will be implemented when HotkeyManager supports dynamic updates
+                HotkeyCaptureOverlay(isActive: $isCapturingHotkey) { keyCode, modifiers in
+                    guard let hotkey = controller.hotkeyManager else { return }
+                    hotkey.stop()
+                    hotkey.keyCode = keyCode
+                    hotkey.modifierFlags = modifiers
+                    hotkey.start()
                 }
             }
         }

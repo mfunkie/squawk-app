@@ -40,7 +40,8 @@ final class AudioCaptureManager {
 
         // Guard: check that an input device exists
         let inputNode = audioEngine.inputNode
-        guard inputNode.inputFormat(forBus: 0).channelCount > 0 else {
+        let hwFormat = inputNode.inputFormat(forBus: 0)
+        guard hwFormat.channelCount > 0 else {
             throw AudioCaptureError.noInputDevice
         }
 
@@ -51,17 +52,22 @@ final class AudioCaptureManager {
             interleaved: false
         )!
 
-        // AVAudioEngine automatically resamples from hardware rate (48kHz)
-        // to our desired 16kHz format
-        inputNode.installTap(onBus: 0, bufferSize: 4096, format: desiredFormat) {
+        // Set up converter from hardware format to 16kHz mono
+        guard let converter = AVAudioConverter(from: hwFormat, to: desiredFormat) else {
+            Log.audio.error("Cannot create audio converter from \(hwFormat) to \(desiredFormat)")
+            throw AudioCaptureError.noInputDevice
+        }
+
+        // Tap at hardware format — resampling in the tap callback avoids format mismatch
+        inputNode.installTap(onBus: 0, bufferSize: 4096, format: hwFormat) {
             [weak self] buffer, _ in
-            self?.processTapBuffer(buffer)
+            self?.convertAndProcess(buffer: buffer, converter: converter, outputFormat: desiredFormat)
         }
 
         audioEngine.prepare()
         try audioEngine.start()
         isCapturing = true
-        Log.audio.info("Audio capture started")
+        Log.audio.info("Audio capture started (hw: \(hwFormat.sampleRate)Hz → 16kHz)")
     }
 
     func stopCapture() -> [Float] {
@@ -83,6 +89,31 @@ final class AudioCaptureManager {
     }
 
     // MARK: - Buffer Processing
+
+    private func convertAndProcess(buffer: AVAudioPCMBuffer, converter: AVAudioConverter, outputFormat: AVAudioFormat) {
+        let ratio = outputFormat.sampleRate / buffer.format.sampleRate
+        let outputFrameCount = AVAudioFrameCount(Double(buffer.frameLength) * ratio)
+        guard let outputBuffer = AVAudioPCMBuffer(pcmFormat: outputFormat, frameCapacity: outputFrameCount) else { return }
+
+        var error: NSError?
+        var consumed = false
+        converter.convert(to: outputBuffer, error: &error) { _, outStatus in
+            if consumed {
+                outStatus.pointee = .noDataNow
+                return nil
+            }
+            consumed = true
+            outStatus.pointee = .haveData
+            return buffer
+        }
+
+        if let error {
+            Log.audio.error("Audio conversion error: \(error)")
+            return
+        }
+
+        processTapBuffer(outputBuffer)
+    }
 
     private func processTapBuffer(_ buffer: AVAudioPCMBuffer) {
         guard let channelData = buffer.floatChannelData else { return }

@@ -3,6 +3,7 @@ import SwiftUI
 struct StatusBarText: View {
     let state: DictationState
     let lastError: String?
+    var hotkeyDescription: String = "\u{2318}\u{21E7}Space"
 
     var body: some View {
         switch state {
@@ -13,7 +14,7 @@ struct StatusBarText: View {
                     .foregroundStyle(.red)
                     .lineLimit(1)
             } else {
-                Text("Ready — ⌘⇧Space to record")
+                Text("Ready — \(hotkeyDescription) to record")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

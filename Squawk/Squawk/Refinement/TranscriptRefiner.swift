@@ -3,7 +3,7 @@ import os
 
 struct TranscriptRefiner {
     private let client: OllamaClient
-    private let defaultModel = "mistral"
+    private let defaultModel = ""
 
     private static let defaultSystemPrompt = """
         You are a transcript cleaner. Your ONLY job is to clean up speech-to-text output.

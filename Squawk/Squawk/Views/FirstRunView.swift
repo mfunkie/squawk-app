@@ -4,6 +4,8 @@ struct FirstRunView: View {
     @Environment(DictationController.self) private var controller
     @AppStorage("hasCompletedSetup") private var hasCompletedSetup = false
     @State private var currentStep: SetupStep = .welcome
+    @State private var micStatus: MicrophonePermission = AudioPermissions.currentStatus
+    @State private var hasAccessibility: Bool = HotkeyManager.hasAccessibilityPermission
 
     var body: some View {
         VStack(spacing: 20) {
@@ -28,6 +30,10 @@ struct FirstRunView: View {
         }
         .padding(20)
         .frame(width: 340, height: 450)
+        .onAppear {
+            micStatus = AudioPermissions.currentStatus
+            hasAccessibility = HotkeyManager.hasAccessibilityPermission
+        }
     }
 
     // MARK: - Step Content
@@ -63,7 +69,7 @@ struct FirstRunView: View {
                     .foregroundStyle(.green)
                 Text("All Set!")
                     .font(.title2.bold())
-                Text("Press \u{2318}\u{21E7}Space anywhere to start dictating.")
+                Text("Press \(controller.hotkeyManager?.hotkeyDescription ?? "\u{2318}\u{21E7}Space") anywhere to start dictating.")
                     .multilineTextAlignment(.center)
                     .foregroundStyle(.secondary)
             }
@@ -122,8 +128,7 @@ struct FirstRunView: View {
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.secondary)
 
-            let status = AudioPermissions.currentStatus
-            switch status {
+            switch micStatus {
             case .authorized:
                 Label("Permission granted", systemImage: "checkmark.circle.fill")
                     .foregroundStyle(.green)
@@ -137,7 +142,10 @@ struct FirstRunView: View {
                 }
             default:
                 Button("Grant Access") {
-                    Task { _ = await AudioPermissions.requestAccess() }
+                    Task {
+                        _ = await AudioPermissions.requestAccess()
+                        micStatus = AudioPermissions.currentStatus
+                    }
                 }
             }
         }
@@ -154,12 +162,23 @@ struct FirstRunView: View {
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.secondary)
 
-            if HotkeyManager.hasAccessibilityPermission {
+            if hasAccessibility {
                 Label("Permission granted", systemImage: "checkmark.circle.fill")
                     .foregroundStyle(.green)
             } else {
                 Button("Grant Access") {
                     HotkeyManager.requestAccessibilityPermission()
+                    // Poll for change since accessibility prompt is out-of-process
+                    Task {
+                        for _ in 0..<30 {
+                            try? await Task.sleep(for: .seconds(1))
+                            let granted = HotkeyManager.hasAccessibilityPermission
+                            if granted {
+                                hasAccessibility = true
+                                break
+                            }
+                        }
+                    }
                 }
                 Button("Skip for now") {
                     currentStep = .ready
@@ -205,7 +224,7 @@ struct FirstRunView: View {
         case .modelDownload:
             return controller.modelManager.isDownloaded
         case .microphonePermission:
-            return AudioPermissions.currentStatus == .authorized
+            return micStatus == .authorized
         case .accessibilityPermission:
             return true // Can always skip or proceed
         case .ready:

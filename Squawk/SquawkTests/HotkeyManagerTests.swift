@@ -3,6 +3,19 @@ import XCTest
 
 final class HotkeyManagerTests: XCTestCase {
 
+    override func setUp() {
+        super.setUp()
+        // Clear persisted hotkey settings so tests use defaults
+        UserDefaults.standard.removeObject(forKey: "hotkey.keyCode")
+        UserDefaults.standard.removeObject(forKey: "hotkey.modifierFlags")
+    }
+
+    override func tearDown() {
+        UserDefaults.standard.removeObject(forKey: "hotkey.keyCode")
+        UserDefaults.standard.removeObject(forKey: "hotkey.modifierFlags")
+        super.tearDown()
+    }
+
     // MARK: - Default Configuration
 
     func testDefaultKeyCodeIsSpace() {
@@ -38,6 +51,19 @@ final class HotkeyManagerTests: XCTestCase {
         XCTAssertTrue(desc.contains("Return"), "Should contain Return")
     }
 
+    // MARK: - Persistence
+
+    func testHotkeySettingsPersistToUserDefaults() {
+        let manager = HotkeyManager()
+        manager.keyCode = 36 // Return
+        manager.modifierFlags = [.control, .option]
+
+        // Read from a new instance
+        let manager2 = HotkeyManager()
+        XCTAssertEqual(manager2.keyCode, 36)
+        XCTAssertEqual(manager2.modifierFlags, [.control, .option])
+    }
+
     // MARK: - Debounce
 
     func testDebounceRejectsTriggerWithinInterval() {
@@ -45,7 +71,6 @@ final class HotkeyManagerTests: XCTestCase {
         var triggerCount = 0
         manager.onToggle = { triggerCount += 1 }
 
-        // Simulate two rapid triggers
         manager.simulateTrigger()
         manager.simulateTrigger() // should be debounced
         XCTAssertEqual(triggerCount, 1)
@@ -57,7 +82,6 @@ final class HotkeyManagerTests: XCTestCase {
         manager.onToggle = { triggerCount += 1 }
 
         manager.simulateTrigger()
-        // Move the last trigger time back to allow next trigger
         manager.resetDebounceForTesting()
         manager.simulateTrigger()
         XCTAssertEqual(triggerCount, 2)

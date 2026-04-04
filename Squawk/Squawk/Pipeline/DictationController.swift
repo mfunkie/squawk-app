@@ -24,15 +24,30 @@ final class DictationController {
     private let transcriptRefiner = TranscriptRefiner()
     private let textInjector = TextInjector()
     let history = TranscriptHistory()
+    var hotkeyManager: HotkeyManager?
 
-    // MARK: - Settings
-    var ollamaEnabled = true
-    var ollamaModel = "mistral"
-    var autoPasteEnabled = false
-    var restoreClipboardEnabled = true
-
-    /// Maximum recording duration in seconds (default 5 minutes)
-    var maxRecordingDuration: TimeInterval = 300
+    // MARK: - Settings (backed by UserDefaults to stay in sync with @AppStorage in views)
+    var ollamaEnabled: Bool {
+        UserDefaults.standard.object(forKey: "ollama.enabled") as? Bool ?? true
+    }
+    var ollamaModel: String {
+        let model = UserDefaults.standard.string(forKey: "ollama.model") ?? ""
+        if model.isEmpty {
+            Log.pipeline.info("No Ollama model configured in settings")
+            return ""
+        }
+        return model
+    }
+    var autoPasteEnabled: Bool {
+        UserDefaults.standard.object(forKey: "output.autoPaste") as? Bool ?? false
+    }
+    var restoreClipboardEnabled: Bool {
+        UserDefaults.standard.object(forKey: "output.restoreClipboard") as? Bool ?? true
+    }
+    var maxRecordingDuration: TimeInterval {
+        let stored = UserDefaults.standard.integer(forKey: "recording.maxDuration")
+        return stored > 0 ? TimeInterval(stored) : 300
+    }
 
     // MARK: - Private
     private var recordingTimeoutTask: Task<Void, Never>?
@@ -166,14 +181,15 @@ final class DictationController {
 
         // 5. Optionally refine with Ollama
         var finalText = rawTranscript
-        if ollamaEnabled && ollamaAvailable {
+        let currentModel = ollamaModel
+        if ollamaEnabled && ollamaAvailable && !currentModel.isEmpty {
             state = .refining
             Log.pipeline.info("State: transcribing → refining")
             do {
                 let refinedTask = Task {
                     try await transcriptRefiner.refine(
                         rawTranscript: rawTranscript,
-                        model: ollamaModel
+                        model: currentModel
                     )
                 }
 
