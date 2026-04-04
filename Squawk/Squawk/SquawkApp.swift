@@ -24,7 +24,7 @@ struct SquawkApp: App {
     }
 
     var body: some Scene {
-        MenuBarExtra("Squawk", systemImage: dictationController.menuBarIcon) {
+        MenuBarExtra {
             Group {
                 if hasCompletedSetup {
                     MenuBarView()
@@ -37,6 +37,8 @@ struct SquawkApp: App {
             .onAppear {
                 startServicesIfNeeded()
             }
+        } label: {
+            MenuBarLabel(state: dictationController.state)
         }
         .menuBarExtraStyle(.window)
     }
