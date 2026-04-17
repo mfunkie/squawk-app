@@ -112,6 +112,7 @@ final class DictationController {
             lastError = nil
             consecutiveErrors = 0
             startRecordingTimeout()
+            playCue(.start)
             Log.pipeline.info("State: idle → recording")
         } catch {
             lastError = error.localizedDescription
@@ -139,6 +140,7 @@ final class DictationController {
 
         // 1. Stop audio capture
         let samples = audioCaptureManager.stopCapture()
+        playCue(.stop)
         guard samples.count > 8000 else { // <0.5 seconds = discard
             Log.pipeline.info("Audio too short (\(samples.count) samples) — discarding")
             state = .idle
@@ -236,6 +238,23 @@ final class DictationController {
 
         // 8. Done
         state = .idle
+    }
+
+    // MARK: - Sound Cues
+
+    private enum SoundCue {
+        case start, stop
+
+        var systemSoundName: String {
+            switch self {
+            case .start: return "Tink"
+            case .stop: return "Pop"
+            }
+        }
+    }
+
+    private func playCue(_ cue: SoundCue) {
+        NSSound(named: cue.systemSoundName)?.play()
     }
 
     // MARK: - Error Handling
