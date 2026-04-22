@@ -9,40 +9,46 @@ struct TranscriptListView: View {
         if controller.history.entries.isEmpty {
             TranscriptEmptyState()
         } else {
-            VStack(spacing: 0) {
-                HStack {
-                    Spacer()
-                    Button("Clear All", action: presentClearConfirmation)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .confirmationDialog(
-                            "Clear all transcripts?",
-                            isPresented: $showClearConfirmation
-                        ) {
-                            Button("Clear All", role: .destructive, action: clearAll)
-                        }
-                }
-                .padding(.horizontal, 12)
-                .padding(.top, 4)
-
-                ScrollView {
-                    LazyVStack(spacing: 4) {
-                        ForEach(controller.history.entries) { entry in
-                            TranscriptRow(
-                                entry: entry,
-                                isCopied: copiedEntryId == entry.id
-                            )
-                            .onTapGesture {
-                                copyEntry(entry)
-                            }
-                            .accessibilityAddTraits(.isButton)
-                            .accessibilityHint("Double-tap to copy")
-                        }
+            ZStack {
+                VStack(spacing: 0) {
+                    HStack {
+                        Spacer()
+                        Button("Clear All", action: presentClearConfirmation)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                     }
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
+                    .padding(.horizontal, 12)
+                    .padding(.top, 4)
+
+                    ScrollView {
+                        LazyVStack(spacing: 4) {
+                            ForEach(controller.history.entries) { entry in
+                                TranscriptRow(
+                                    entry: entry,
+                                    isCopied: copiedEntryId == entry.id
+                                )
+                                .onTapGesture {
+                                    copyEntry(entry)
+                                }
+                                .accessibilityAddTraits(.isButton)
+                                .accessibilityHint("Double-tap to copy")
+                            }
+                        }
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                    }
+                }
+
+                if showClearConfirmation {
+                    ClearAllConfirmation(
+                        onCancel: dismissClearConfirmation,
+                        onConfirm: confirmClearAll
+                    )
+                    .transition(.opacity)
+                    .zIndex(1)
                 }
             }
+            .animation(.easeInOut(duration: 0.15), value: showClearConfirmation)
         }
     }
 
@@ -50,8 +56,13 @@ struct TranscriptListView: View {
         showClearConfirmation = true
     }
 
-    private func clearAll() {
+    private func dismissClearConfirmation() {
+        showClearConfirmation = false
+    }
+
+    private func confirmClearAll() {
         controller.history.clearAll()
+        showClearConfirmation = false
     }
 
     private func copyEntry(_ entry: TranscriptEntry) {
@@ -65,6 +76,46 @@ struct TranscriptListView: View {
             if copiedEntryId == entry.id {
                 copiedEntryId = nil
             }
+        }
+    }
+}
+
+private struct ClearAllConfirmation: View {
+    let onCancel: () -> Void
+    let onConfirm: () -> Void
+
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.35)
+                .ignoresSafeArea()
+                .contentShape(Rectangle())
+                .onTapGesture(perform: onCancel)
+
+            VStack(spacing: 16) {
+                Text("Clear all transcripts?")
+                    .font(.headline)
+
+                HStack(spacing: 10) {
+                    Button(action: onCancel) {
+                        Text("Cancel")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .keyboardShortcut(.cancelAction)
+                    .controlSize(.large)
+
+                    Button(role: .destructive, action: onConfirm) {
+                        Text("Clear All")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .keyboardShortcut(.defaultAction)
+                    .controlSize(.large)
+                }
+            }
+            .padding(20)
+            .frame(maxWidth: 260)
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .shadow(radius: 18, y: 6)
+            .padding(24)
         }
     }
 }
