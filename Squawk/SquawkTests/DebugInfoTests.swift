@@ -50,7 +50,6 @@ final class DebugInfoTests: XCTestCase {
             asrModelLoaded: true,
             ollamaAvailable: false,
             ollamaModel: "mistral",
-            recordingMode: "toggle",
             autoPasteEnabled: false,
             historyCount: 5,
             lastError: nil
@@ -65,7 +64,6 @@ final class DebugInfoTests: XCTestCase {
             asrModelLoaded: false,
             ollamaAvailable: true,
             ollamaModel: "gemma",
-            recordingMode: "toggle",
             autoPasteEnabled: true,
             historyCount: 0,
             lastError: nil
@@ -82,7 +80,6 @@ final class DebugInfoTests: XCTestCase {
             asrModelLoaded: false,
             ollamaAvailable: false,
             ollamaModel: "mistral",
-            recordingMode: "toggle",
             autoPasteEnabled: false,
             historyCount: 0,
             lastError: "Something broke"
@@ -97,7 +94,6 @@ final class DebugInfoTests: XCTestCase {
             asrModelLoaded: true,
             ollamaAvailable: false,
             ollamaModel: "mistral",
-            recordingMode: "toggle",
             autoPasteEnabled: false,
             historyCount: 3,
             lastError: nil

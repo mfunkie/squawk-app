@@ -22,30 +22,42 @@ final class HotkeyManager {
     var onToggle: (() -> Void)?
 
     // MARK: - Private
-    private var globalMonitor: Any?
+    private var hotKeyRef: EventHotKeyRef?
+    private var eventHandlerRef: EventHandlerRef?
     private var localMonitor: Any?
     private var lastTriggerTime: Date = .distantPast
     private let debounceInterval: TimeInterval = 0.3
+    private static let hotKeySignature: OSType = {
+        let chars: [UInt8] = [0x53, 0x51, 0x57, 0x4B] // 'SQWK'
+        return (OSType(chars[0]) << 24) | (OSType(chars[1]) << 16) | (OSType(chars[2]) << 8) | OSType(chars[3])
+    }()
 
-    // Push-to-talk
-    private var eventTap: CFMachPort?
-    var onPushStart: (() -> Void)?
-    var onPushEnd: (() -> Void)?
+    // MARK: - Modifier translation
+
+    /// Translate `NSEvent.ModifierFlags` into the Carbon modifier bitmask that
+    /// `RegisterEventHotKey` expects. Non-modifier flags (capsLock, numericPad,
+    /// function) are ignored.
+    static func carbonModifiers(from flags: NSEvent.ModifierFlags) -> UInt32 {
+        var result: UInt32 = 0
+        if flags.contains(.command) { result |= UInt32(cmdKey) }
+        if flags.contains(.option) { result |= UInt32(optionKey) }
+        if flags.contains(.shift) { result |= UInt32(shiftKey) }
+        if flags.contains(.control) { result |= UInt32(controlKey) }
+        return result
+    }
 
     // MARK: - Toggle Mode (no Accessibility needed)
 
     func start() {
-        // Global monitor: fires when OTHER apps are focused
-        globalMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) {
-            [weak self] event in
-            self?.handleKeyEvent(event)
-        }
+        registerCarbonHotKey()
 
-        // Local monitor: fires when THIS app's popover is focused
+        // Local monitor: fires when THIS app's popover is focused — Carbon
+        // hotkeys don't fire for events delivered to the registering app's own
+        // key window (e.g. the MenuBarExtra popover).
         localMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) {
             [weak self] event in
             self?.handleKeyEvent(event)
-            return event // pass through
+            return event
         }
 
         observeSystemEvents()
@@ -53,15 +65,86 @@ final class HotkeyManager {
     }
 
     func stop() {
-        if let globalMonitor {
-            NSEvent.removeMonitor(globalMonitor)
-            self.globalMonitor = nil
-        }
+        unregisterCarbonHotKey()
         if let localMonitor {
             NSEvent.removeMonitor(localMonitor)
             self.localMonitor = nil
         }
-        stopPushToTalk()
+    }
+
+    private func registerCarbonHotKey() {
+        unregisterCarbonHotKey()
+
+        let hotKeyID = EventHotKeyID(signature: Self.hotKeySignature, id: 1)
+        var ref: EventHotKeyRef?
+        let registerStatus = RegisterEventHotKey(
+            UInt32(keyCode),
+            Self.carbonModifiers(from: modifierFlags),
+            hotKeyID,
+            GetApplicationEventTarget(),
+            0,
+            &ref
+        )
+        guard registerStatus == noErr, let ref else {
+            Log.pipeline.error("RegisterEventHotKey failed: \(registerStatus)")
+            return
+        }
+        hotKeyRef = ref
+
+        if eventHandlerRef == nil {
+            var spec = EventTypeSpec(
+                eventClass: OSType(kEventClassKeyboard),
+                eventKind: UInt32(kEventHotKeyPressed)
+            )
+            var handlerRef: EventHandlerRef?
+            let handlerStatus = InstallEventHandler(
+                GetApplicationEventTarget(),
+                { _, event, userData -> OSStatus in
+                    guard let userData, let event else { return OSStatus(eventNotHandledErr) }
+                    let manager = Unmanaged<HotkeyManager>.fromOpaque(userData).takeUnretainedValue()
+                    var id = EventHotKeyID()
+                    let status = GetEventParameter(
+                        event,
+                        EventParamName(kEventParamDirectObject),
+                        EventParamType(typeEventHotKeyID),
+                        nil,
+                        MemoryLayout<EventHotKeyID>.size,
+                        nil,
+                        &id
+                    )
+                    guard status == noErr, id.signature == HotkeyManager.hotKeySignature else {
+                        return OSStatus(eventNotHandledErr)
+                    }
+                    manager.handleCarbonHotKey()
+                    return noErr
+                },
+                1,
+                &spec,
+                Unmanaged.passUnretained(self).toOpaque(),
+                &handlerRef
+            )
+            if handlerStatus == noErr {
+                eventHandlerRef = handlerRef
+            } else {
+                Log.pipeline.error("InstallEventHandler failed: \(handlerStatus)")
+            }
+        }
+    }
+
+    private func unregisterCarbonHotKey() {
+        if let hotKeyRef {
+            UnregisterEventHotKey(hotKeyRef)
+            self.hotKeyRef = nil
+        }
+    }
+
+    private func handleCarbonHotKey() {
+        guard debounceCheck() else {
+            Log.pipeline.debug("Hotkey debounced")
+            return
+        }
+        Log.pipeline.info("Hotkey triggered")
+        onToggle?()
     }
 
     // MARK: - Key Event Handling
@@ -183,7 +266,7 @@ final class HotkeyManager {
         return parts.joined()
     }
 
-    // MARK: - Push-to-Talk (requires Accessibility permission)
+    // MARK: - Accessibility permission (needed for auto-paste via CGEventPost)
 
     static var hasAccessibilityPermission: Bool {
         AXIsProcessTrusted()
@@ -197,65 +280,6 @@ final class HotkeyManager {
     static func openAccessibilitySettings() {
         if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
             NSWorkspace.shared.open(url)
-        }
-    }
-
-    func startPushToTalk() {
-        guard Self.hasAccessibilityPermission else {
-            Log.pipeline.warning("Push-to-talk requires Accessibility permission")
-            return
-        }
-
-        let mask = (1 << CGEventType.keyDown.rawValue) | (1 << CGEventType.keyUp.rawValue)
-
-        guard let tap = CGEvent.tapCreate(
-            tap: .cghidEventTap,
-            place: .headInsertEventTap,
-            options: .listenOnly,
-            eventsOfInterest: CGEventMask(mask),
-            callback: { _, type, event, userInfo in
-                let manager = Unmanaged<HotkeyManager>.fromOpaque(userInfo!).takeUnretainedValue()
-                manager.handleCGEvent(type: type, event: event)
-                return Unmanaged.passRetained(event)
-            },
-            userInfo: Unmanaged.passUnretained(self).toOpaque()
-        ) else {
-            Log.pipeline.error("Failed to create CGEvent tap")
-            return
-        }
-
-        eventTap = tap
-        let runLoopSource = CFMachPortCreateRunLoopSource(nil, tap, 0)
-        CFRunLoopAddSource(CFRunLoopGetCurrent(), runLoopSource, .commonModes)
-        Log.pipeline.info("Push-to-talk CGEvent tap installed")
-    }
-
-    func stopPushToTalk() {
-        if let eventTap {
-            CGEvent.tapEnable(tap: eventTap, enable: false)
-            CFMachPortInvalidate(eventTap)
-            self.eventTap = nil
-        }
-    }
-
-    private func handleCGEvent(type: CGEventType, event: CGEvent) {
-        let code = UInt16(event.getIntegerValueField(.keyboardEventKeycode))
-        guard code == keyCode else { return }
-
-        let flags = NSEvent.ModifierFlags(rawValue: UInt(event.flags.rawValue))
-        let relevantModifiers: NSEvent.ModifierFlags = [.command, .shift, .option, .control]
-        guard flags.intersection(relevantModifiers) == modifierFlags else { return }
-
-        switch type {
-        case .keyDown:
-            guard debounceCheck() else { return }
-            Log.pipeline.info("Push-to-talk: key down")
-            onPushStart?()
-        case .keyUp:
-            Log.pipeline.info("Push-to-talk: key up")
-            onPushEnd?()
-        default:
-            break
         }
     }
 

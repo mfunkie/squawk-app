@@ -158,7 +158,7 @@ struct FirstRunView: View {
                 .font(.system(size: 36))
             Text("Accessibility (Optional)")
                 .font(.title3.bold())
-            Text("Required for push-to-talk and auto-paste. You can skip this and enable later in Settings.")
+            Text("Required for auto-paste. You can skip this and enable later in Settings.")
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.secondary)
 

@@ -20,7 +20,6 @@ enum DebugInfoBuilder {
         asrModelLoaded: Bool,
         ollamaAvailable: Bool,
         ollamaModel: String,
-        recordingMode: String,
         autoPasteEnabled: Bool,
         historyCount: Int,
         lastError: String?
@@ -32,7 +31,6 @@ enum DebugInfoBuilder {
         Chip: \(machineModel)
         ASR Model: \(asrModelLoaded ? "loaded" : "not loaded")
         Ollama: \(ollamaStatus)
-        Recording mode: \(recordingMode)
         Auto-paste: \(autoPasteEnabled)
         History entries: \(historyCount)
         Last error: \(lastError ?? "none")

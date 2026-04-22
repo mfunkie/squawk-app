@@ -60,6 +60,9 @@ final class RecordingIndicatorController {
     func show() {
         let panel = self.panel ?? makePanel()
         self.panel = panel
+        // Refresh the hotkey hint each time we show, so if the user changed
+        // their hotkey between recordings the pill reflects the new binding.
+        refreshHotkeyHint(in: panel)
         positionIfNeeded(panel)
         panel.orderFrontRegardless()
     }
@@ -70,8 +73,20 @@ final class RecordingIndicatorController {
 
     // MARK: - Panel construction
 
+    private var currentHotkeyDescription: String {
+        observedController?.hotkeyManager?.hotkeyDescription ?? "\u{2318}\u{21E7}Space"
+    }
+
+    private func refreshHotkeyHint(in panel: RecordingIndicatorPanel) {
+        guard let hostingView = panel.contentView as? NSHostingView<RecordingIndicatorView> else { return }
+        hostingView.rootView = RecordingIndicatorView(hotkeyDescription: currentHotkeyDescription)
+        panel.setContentSize(hostingView.fittingSize)
+    }
+
     private func makePanel() -> RecordingIndicatorPanel {
-        let hostingView = NSHostingView(rootView: RecordingIndicatorView())
+        let hostingView = NSHostingView(
+            rootView: RecordingIndicatorView(hotkeyDescription: currentHotkeyDescription)
+        )
         hostingView.translatesAutoresizingMaskIntoConstraints = false
 
         let size = hostingView.fittingSize

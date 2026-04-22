@@ -1,4 +1,5 @@
 import XCTest
+import Carbon.HIToolbox
 @testable import Squawk
 
 final class HotkeyManagerTests: XCTestCase {
@@ -85,5 +86,47 @@ final class HotkeyManagerTests: XCTestCase {
         manager.resetDebounceForTesting()
         manager.simulateTrigger()
         XCTAssertEqual(triggerCount, 2)
+    }
+
+    // MARK: - Carbon modifier translation
+
+    func testCarbonModifiersCommand() {
+        XCTAssertEqual(HotkeyManager.carbonModifiers(from: [.command]), UInt32(cmdKey))
+    }
+
+    func testCarbonModifiersOption() {
+        XCTAssertEqual(HotkeyManager.carbonModifiers(from: [.option]), UInt32(optionKey))
+    }
+
+    func testCarbonModifiersShift() {
+        XCTAssertEqual(HotkeyManager.carbonModifiers(from: [.shift]), UInt32(shiftKey))
+    }
+
+    func testCarbonModifiersControl() {
+        XCTAssertEqual(HotkeyManager.carbonModifiers(from: [.control]), UInt32(controlKey))
+    }
+
+    func testCarbonModifiersCommandShift() {
+        XCTAssertEqual(
+            HotkeyManager.carbonModifiers(from: [.command, .shift]),
+            UInt32(cmdKey | shiftKey)
+        )
+    }
+
+    func testCarbonModifiersAllFour() {
+        XCTAssertEqual(
+            HotkeyManager.carbonModifiers(from: [.command, .shift, .option, .control]),
+            UInt32(cmdKey | shiftKey | optionKey | controlKey)
+        )
+    }
+
+    func testCarbonModifiersIgnoresIrrelevantFlags() {
+        // capsLock and numericPad should not contribute
+        let flags: NSEvent.ModifierFlags = [.option, .capsLock, .numericPad]
+        XCTAssertEqual(HotkeyManager.carbonModifiers(from: flags), UInt32(optionKey))
+    }
+
+    func testCarbonModifiersEmpty() {
+        XCTAssertEqual(HotkeyManager.carbonModifiers(from: []), 0)
     }
 }
