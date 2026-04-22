@@ -11,8 +11,8 @@ struct MenuBarLabel: View {
 
     private var iconName: String {
         switch state {
-        case .idle: return "mic"
-        case .recording: return "mic.fill"
+        case .idle: return "bird"
+        case .recording: return "bird.fill"
         case .transcribing: return "ellipsis.circle"
         case .refining: return "sparkles"
         }

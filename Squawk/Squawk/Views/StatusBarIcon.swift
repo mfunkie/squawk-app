@@ -6,7 +6,7 @@ struct StatusBarIcon: View {
     var body: some View {
         switch state {
         case .idle:
-            Image(systemName: "mic")
+            Image(systemName: "bird")
                 .foregroundStyle(.secondary)
         case .recording:
             Circle()
