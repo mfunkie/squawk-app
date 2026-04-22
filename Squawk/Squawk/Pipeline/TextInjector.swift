@@ -1,7 +1,16 @@
 import AppKit
+import ApplicationServices
 import os
 
 struct TextInjector {
+
+    enum PasteResult: Equatable {
+        case pasted
+        case skippedNoAccessibility
+    }
+
+    /// Live Accessibility-trust check. Overridable in tests.
+    var isAccessibilityTrusted: () -> Bool = { AXIsProcessTrusted() }
 
     /// Copy text to clipboard only.
     func copyToClipboard(_ text: String) {
@@ -12,27 +21,33 @@ struct TextInjector {
     }
 
     /// Copy text and simulate Cmd+V paste into the active app, then restore original clipboard.
-    func pasteIntoActiveApp(_ text: String) async {
+    /// Returns `.skippedNoAccessibility` (with the text left on the clipboard for manual ⌘V) when
+    /// the OS doesn't trust this process — TCC's per-binary trust can lapse silently after an
+    /// app upgrade even while the System Settings toggle still appears ON.
+    func pasteIntoActiveApp(_ text: String) async -> PasteResult {
         let pasteboard = NSPasteboard.general
 
-        // 1. Save current clipboard contents
+        guard isAccessibilityTrusted() else {
+            pasteboard.clearContents()
+            pasteboard.setString(text, forType: .string)
+            Log.pipeline.warning("Auto-paste skipped: AXIsProcessTrusted() returned false. Text left on clipboard for manual ⌘V — toggle Squawk OFF then ON in System Settings → Privacy & Security → Accessibility.")
+            return .skippedNoAccessibility
+        }
+
         let savedContents = saveClipboard(pasteboard)
 
-        // 2. Set our text
         pasteboard.clearContents()
         pasteboard.setString(text, forType: .string)
 
-        // 3. Small delay to ensure clipboard is updated
         try? await Task.sleep(for: .milliseconds(50))
 
-        // 4. Simulate Cmd+V
         simulatePaste()
 
-        // 5. Restore original clipboard after paste completes
         try? await Task.sleep(for: .milliseconds(200))
         restoreClipboard(pasteboard, from: savedContents)
 
         Log.pipeline.info("Text pasted into active app and clipboard restored")
+        return .pasted
     }
 
     // MARK: - Clipboard Save/Restore
@@ -77,11 +92,17 @@ struct TextInjector {
         let source = CGEventSource(stateID: .hidSystemState)
 
         // Key down: V (keyCode 9) with Cmd modifier
-        guard let keyDown = CGEvent(keyboardEventSource: source, virtualKey: 0x09, keyDown: true) else { return }
+        guard let keyDown = CGEvent(keyboardEventSource: source, virtualKey: 0x09, keyDown: true) else {
+            Log.pipeline.error("simulatePaste: failed to create keyDown CGEvent")
+            return
+        }
         keyDown.flags = .maskCommand
 
         // Key up
-        guard let keyUp = CGEvent(keyboardEventSource: source, virtualKey: 0x09, keyDown: false) else { return }
+        guard let keyUp = CGEvent(keyboardEventSource: source, virtualKey: 0x09, keyDown: false) else {
+            Log.pipeline.error("simulatePaste: failed to create keyUp CGEvent")
+            return
+        }
         keyUp.flags = .maskCommand
 
         keyDown.post(tap: .cghidEventTap)

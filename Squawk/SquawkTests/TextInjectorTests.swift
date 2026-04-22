@@ -37,4 +37,26 @@ final class TextInjectorTests: XCTestCase {
         let result = NSPasteboard.general.string(forType: .string)
         XCTAssertEqual(result, "Hello 世界 🌍")
     }
+
+    // MARK: - Accessibility Trust Gate
+
+    func testPasteSkipsSimulationWhenAccessibilityNotTrusted() async {
+        var injector = TextInjector()
+        injector.isAccessibilityTrusted = { false }
+
+        let result = await injector.pasteIntoActiveApp("manual paste fallback")
+
+        XCTAssertEqual(result, .skippedNoAccessibility)
+        // Text must remain on the clipboard so the user can ⌘V manually.
+        XCTAssertEqual(NSPasteboard.general.string(forType: .string), "manual paste fallback")
+    }
+
+    func testPasteReportsPastedWhenAccessibilityTrusted() async {
+        var injector = TextInjector()
+        injector.isAccessibilityTrusted = { true }
+
+        let result = await injector.pasteIntoActiveApp("trusted path")
+
+        XCTAssertEqual(result, .pasted)
+    }
 }

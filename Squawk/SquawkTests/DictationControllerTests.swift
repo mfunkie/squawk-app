@@ -3,6 +3,22 @@ import XCTest
 
 final class DictationControllerTests: XCTestCase {
 
+    override func setUp() {
+        super.setUp()
+        // DictationController reads these settings from UserDefaults.standard. Without
+        // clearing them, tests inherit whatever the developer toggled on their machine.
+        let keys = [
+            "ollama.enabled",
+            "ollama.model",
+            "output.autoPaste",
+            "output.restoreClipboard",
+            "recording.maxDuration",
+        ]
+        for key in keys {
+            UserDefaults.standard.removeObject(forKey: key)
+        }
+    }
+
     // MARK: - State Machine Transitions
 
     func testInitialStateIsIdle() {

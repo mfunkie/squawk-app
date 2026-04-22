@@ -224,7 +224,10 @@ final class DictationController {
 
         // 6. Auto-paste if enabled
         if autoPasteEnabled {
-            await textInjector.pasteIntoActiveApp(finalText)
+            let result = await textInjector.pasteIntoActiveApp(finalText)
+            if result == .skippedNoAccessibility {
+                ClipboardToast.show("Copied to clipboard")
+            }
         }
 
         // 7. Record latency

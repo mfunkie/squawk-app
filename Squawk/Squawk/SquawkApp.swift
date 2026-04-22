@@ -9,8 +9,11 @@ struct SquawkApp: App {
     private let hotkeyManager: HotkeyManager
 
     init() {
-        // Single-instance enforcement
-        SingleInstanceGuard.terminateIfDuplicate()
+        // Single-instance enforcement — skipped under XCTest so parallel test hosts
+        // don't self-terminate before connecting to the test runner.
+        if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil {
+            SingleInstanceGuard.terminateIfDuplicate()
+        }
 
         let controller = DictationController()
         let hotkey = HotkeyManager()

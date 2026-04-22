@@ -35,9 +35,9 @@ final class SquawkUITests: XCTestCase {
 
     @MainActor
     func testLaunchPerformance() throws {
-        // This measures how long it takes to launch your application.
-        measure(metrics: [XCTApplicationLaunchMetric()]) {
-            XCUIApplication().launch()
-        }
+        // XCTApplicationLaunchMetric needs to relaunch the app each iteration, but
+        // SingleInstanceGuard.terminateIfDuplicate() kills any second copy before it
+        // connects to the test runner — every iteration after the first reports zero metrics.
+        throw XCTSkip("Incompatible with single-instance enforcement (SquawkApp.init).")
     }
 }

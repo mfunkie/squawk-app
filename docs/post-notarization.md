@@ -144,3 +144,11 @@ Alternatively, just ship v1.0.1 and point people to it.
 ## Why the v1.0.0 Build Wasn't Notarized
 
 At release time only an "Apple Development" certificate was in the keychain. That cert can sign apps for local development but cannot be used for `developer-id` export or notarization, so `scripts/build.sh` failed at the export step and the `.app` was copied directly out of the archive. The binary was validly signed but Gatekeeper flags any non-notarized download, which is why the v1.0.0 release notes include the right-click workaround.
+
+## Gotcha: Accessibility permission silently fails on "Apple Development"-signed builds
+
+Separate from the Gatekeeper prompt: an **Apple Development**–signed `.app` installed on a *different* Mac than the dev machine will usually show the Accessibility toggle as ON in System Settings — but `AXIsProcessTrusted()` returns `false`, so `CGEvent.post()` becomes a silent no-op and auto-paste fails. TCC ties Accessibility trust to a stable signing identity; Apple Development certs are provisioning-scoped and don't give TCC something it can verify cross-machine.
+
+Symptoms: recording and transcription work (hotkey uses Carbon, no TCC needed), transcripts land on the clipboard, but nothing pastes. The in-app Settings → Output status row will show "Accessibility not granted — auto-paste will silently fail" even though the OS toggle looks correct.
+
+Fix: ship a proper Developer ID–signed **and** notarized build (steps 2-5 above). As a workaround before a real release is available, the user can toggle Squawk OFF and back ON in System Settings → Privacy & Security → Accessibility — this sometimes pokes TCC into re-evaluating the binary.
