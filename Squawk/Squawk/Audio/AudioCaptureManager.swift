@@ -27,7 +27,6 @@ final class AudioCaptureManager {
     private let audioEngine = AVAudioEngine()
     private var audioBuffer: [Float] = []
     private var bufferLock = os_unfair_lock()
-    private var levelUpdateCounter = 0
 
     init() {
         observeConfigurationChanges()
@@ -125,13 +124,12 @@ final class AudioCaptureManager {
         audioBuffer.append(contentsOf: samples)
         os_unfair_lock_unlock(&bufferLock)
 
-        // Compute RMS for audio level meter (throttled to ~15fps)
-        levelUpdateCounter += 1
-        if levelUpdateCounter % 3 == 0 {
-            let rms = Self.computeRMS(samples)
-            DispatchQueue.main.async { [weak self] in
-                self?.audioLevel = rms
-            }
+        // Compute RMS for audio level meter on every tap (~12 Hz at 48kHz/4096).
+        // The computation is cheap (vDSP_rmsqv on ~1360 samples after downsampling)
+        // and the extra responsiveness is noticeable in the recording pill.
+        let rms = Self.computeRMS(samples)
+        DispatchQueue.main.async { [weak self] in
+            self?.audioLevel = rms
         }
     }
 

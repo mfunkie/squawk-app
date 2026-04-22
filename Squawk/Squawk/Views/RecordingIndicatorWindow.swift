@@ -28,6 +28,7 @@ final class RecordingIndicatorController {
     func start(observing controller: DictationController) {
         observedController = controller
         observeState()
+        observeAudioLevel()
         handle(state: controller.state)
     }
 
@@ -46,6 +47,24 @@ final class RecordingIndicatorController {
         }
     }
 
+    /// Observes `audioCaptureManager.audioLevel` so the pill's waveform reflects
+    /// real microphone input. NSHostingView does not pick up `@Observable` mutations
+    /// from outside the app's SwiftUI environment, so we rebuild the rootView on each tick.
+    private func observeAudioLevel() {
+        guard let manager = observedController?.audioCaptureManager else { return }
+        withObservationTracking {
+            _ = manager.audioLevel
+        } onChange: { [weak self] in
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                if let panel = self.panel, panel.isVisible {
+                    self.refreshRootView(in: panel)
+                }
+                self.observeAudioLevel()
+            }
+        }
+    }
+
     private func handle(state: DictationState) {
         switch state {
         case .recording:
@@ -58,6 +77,7 @@ final class RecordingIndicatorController {
     // MARK: - Show / Hide
 
     func show() {
+        guard observedController != nil else { return }
         let panel = self.panel ?? makePanel()
         self.panel = panel
         // Refresh the hotkey hint each time we show, so if the user changed
@@ -78,14 +98,33 @@ final class RecordingIndicatorController {
     }
 
     private func refreshHotkeyHint(in panel: RecordingIndicatorPanel) {
-        guard let hostingView = panel.contentView as? NSHostingView<RecordingIndicatorView> else { return }
-        hostingView.rootView = RecordingIndicatorView(hotkeyDescription: currentHotkeyDescription)
-        panel.setContentSize(hostingView.fittingSize)
+        refreshRootView(in: panel)
+        if let hostingView = panel.contentView as? NSHostingView<RecordingIndicatorView> {
+            panel.setContentSize(hostingView.fittingSize)
+        }
+    }
+
+    /// Rebuilds the hosted `RecordingIndicatorView` with the current audio level
+    /// and hotkey hint. Called both on show and on every `audioLevel` tick (~15 fps).
+    /// Does not resize the panel — the pill is fixed-size at a given hotkey string.
+    private func refreshRootView(in panel: RecordingIndicatorPanel) {
+        guard
+            let hostingView = panel.contentView as? NSHostingView<RecordingIndicatorView>,
+            let audioManager = observedController?.audioCaptureManager
+        else { return }
+        hostingView.rootView = RecordingIndicatorView(
+            audioManager: audioManager,
+            hotkeyDescription: currentHotkeyDescription
+        )
     }
 
     private func makePanel() -> RecordingIndicatorPanel {
+        let audioManager = observedController!.audioCaptureManager
         let hostingView = NSHostingView(
-            rootView: RecordingIndicatorView(hotkeyDescription: currentHotkeyDescription)
+            rootView: RecordingIndicatorView(
+                audioManager: audioManager,
+                hotkeyDescription: currentHotkeyDescription
+            )
         )
         hostingView.translatesAutoresizingMaskIntoConstraints = false
 

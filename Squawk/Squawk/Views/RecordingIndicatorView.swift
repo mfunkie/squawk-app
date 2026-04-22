@@ -1,19 +1,16 @@
 import SwiftUI
 
 struct RecordingIndicatorView: View {
+    let audioManager: AudioCaptureManager
     let hotkeyDescription: String
 
-    var body: some View {
-        HStack(spacing: 10) {
-            Circle()
-                .fill(.red)
-                .frame(width: 8, height: 8)
-                .modifier(PulsingModifier())
+    private static let calculator = AudioLevelCalculator(barCount: 5)
 
-            Image(systemName: "waveform")
-                .font(.system(size: 18, weight: .medium))
-                .foregroundStyle(.primary)
-                .symbolEffect(.variableColor.iterative.reversing)
+    var body: some View {
+        let level = Self.calculator.normalizedLevel(for: audioManager.audioLevel)
+
+        HStack(spacing: 10) {
+            AudioWaveMeter(level: level)
 
             VStack(alignment: .leading, spacing: 1) {
                 Text("Listening")

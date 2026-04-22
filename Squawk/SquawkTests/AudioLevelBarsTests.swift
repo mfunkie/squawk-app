@@ -58,4 +58,47 @@ final class AudioLevelBarsTests: XCTestCase {
             XCTAssertFalse(calc.isBarActive(index: index, level: 0), "Bar \(index) should be inactive at level 0")
         }
     }
+
+    // MARK: - Normalized Level (for SF Symbol variableValue)
+    //
+    // dBFS curve: -60 dB (rms ~0.001) → 0, -20 dB (rms 0.1) → 1.
+    // Tuned for typical built-in-mic speech RMS of 0.01-0.03.
+
+    func testNormalizedLevelIsZeroAtSilenceFloor() {
+        let calc = AudioLevelCalculator(barCount: 5)
+        // Below the noise floor cutoff (0.001) — treat as silent.
+        XCTAssertEqual(calc.normalizedLevel(for: 0), 0.0, accuracy: 0.0001)
+        XCTAssertEqual(calc.normalizedLevel(for: 0.0005), 0.0, accuracy: 0.0001)
+    }
+
+    func testNormalizedLevelIsHalfAtQuietSpeech() {
+        let calc = AudioLevelCalculator(barCount: 5)
+        // 0.01 rms ≈ -40 dBFS → halfway across the 40 dB visual range.
+        XCTAssertEqual(calc.normalizedLevel(for: 0.01), 0.5, accuracy: 0.01)
+    }
+
+    func testNormalizedLevelSaturatesAtLoudSpeech() {
+        let calc = AudioLevelCalculator(barCount: 5)
+        // 0.1 rms ≈ -20 dBFS → full.
+        XCTAssertEqual(calc.normalizedLevel(for: 0.1), 1.0, accuracy: 0.0001)
+    }
+
+    func testNormalizedLevelClampsAboveOne() {
+        let calc = AudioLevelCalculator(barCount: 5)
+        XCTAssertEqual(calc.normalizedLevel(for: 1.0), 1.0, accuracy: 0.0001)
+    }
+
+    func testNormalizedLevelClampsNegativeInput() {
+        let calc = AudioLevelCalculator(barCount: 5)
+        XCTAssertEqual(calc.normalizedLevel(for: -0.1), 0.0, accuracy: 0.0001)
+    }
+
+    func testNormalizedLevelIsMonotonic() {
+        let calc = AudioLevelCalculator(barCount: 5)
+        let samples: [Float] = [0.001, 0.005, 0.01, 0.02, 0.05, 0.1]
+        let values = samples.map { calc.normalizedLevel(for: $0) }
+        for i in 1..<values.count {
+            XCTAssertGreaterThan(values[i], values[i - 1], "value[\(i)] should exceed value[\(i-1)]")
+        }
+    }
 }
