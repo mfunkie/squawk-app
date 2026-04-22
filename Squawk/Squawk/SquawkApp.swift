@@ -4,6 +4,7 @@ import SwiftUI
 struct SquawkApp: App {
     @AppStorage("hasCompletedSetup") private var hasCompletedSetup = false
     @State private var dictationController: DictationController
+    @State private var recordingIndicator = RecordingIndicatorController()
     @State private var hasStartedServices = false
     private let hotkeyManager: HotkeyManager
 
@@ -49,6 +50,7 @@ struct SquawkApp: App {
         hotkeyManager.start()
         dictationController.observeSystemEvents()
         dictationController.startOllamaPolling()
+        recordingIndicator.start(observing: dictationController)
         Task {
             await dictationController.modelManager.loadModels()
             if dictationController.modelManager.isDownloaded {
