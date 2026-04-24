@@ -45,6 +45,17 @@ struct SquawkApp: App {
             MenuBarLabel(state: dictationController.state)
         }
         .menuBarExtraStyle(.window)
+
+        Window("Settings", id: "settings") {
+            SettingsWindowView()
+                .environment(dictationController)
+        }
+        .defaultSize(width: 780, height: 520)
+        .commands {
+            CommandGroup(replacing: .appSettings) {
+                SettingsMenuItem()
+            }
+        }
     }
 
     private func startServicesIfNeeded() {

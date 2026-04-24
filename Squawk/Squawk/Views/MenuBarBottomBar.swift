@@ -1,17 +1,17 @@
 import SwiftUI
+import AppKit
 
 struct MenuBarBottomBar: View {
-    @Binding var selectedTab: MenuBarTab
+    @Environment(\.openWindow) private var openWindow
 
     var body: some View {
         HStack {
-            Picker("", selection: $selectedTab) {
-                ForEach(MenuBarTab.allCases, id: \.self) { tab in
-                    Text(tab.rawValue).tag(tab)
-                }
+            Button(action: openSettingsWindow) {
+                Image(systemName: "gearshape")
             }
-            .pickerStyle(.segmented)
-            .labelsHidden()
+            .buttonStyle(.borderless)
+            .help("Settings")
+            .keyboardShortcut(",")
 
             Spacer()
 
@@ -22,7 +22,28 @@ struct MenuBarBottomBar: View {
         .padding(.vertical, 8)
     }
 
+    private func openSettingsWindow() {
+        // Dismiss the MenuBarExtra popover (it is the key window when this
+        // button is clicked). Ordering it out before presenting Settings
+        // avoids leaving the popover floating alongside the new window.
+        NSApp.keyWindow?.orderOut(nil)
+        openWindow(id: "settings")
+        NSApp.activate(ignoringOtherApps: true)
+    }
+
     private func quit() {
         NSApplication.shared.terminate(nil)
+    }
+}
+
+struct SettingsMenuItem: View {
+    @Environment(\.openWindow) private var openWindow
+
+    var body: some View {
+        Button("Settings\u{2026}") {
+            openWindow(id: "settings")
+            NSApp.activate(ignoringOtherApps: true)
+        }
+        .keyboardShortcut(",")
     }
 }
