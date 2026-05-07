@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xcodebuild -project Squawk/Squawk.xcodeproj -scheme Squawk -destination 'platform=macOS' build)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(xcodebuild -project Squawk/Squawk.xcodeproj -scheme Squawk -destination 'platform=macOS' test -only-testing:SquawkTests/TextInjectorTests)",
+      "Bash(xcodebuild -project Squawk/Squawk.xcodeproj -scheme Squawk -destination 'platform=macOS' test -only-testing:SquawkTests/AudioLevelBarsTests)",
+      "Bash(swift scripts/generate-icon.swift)",
+      "Bash(xcodebuild -project Squawk/Squawk.xcodeproj -scheme Squawk -destination 'platform=macOS' test)"
+    ]
+  }
+}
